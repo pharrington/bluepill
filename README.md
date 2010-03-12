@@ -155,6 +155,32 @@ And lastly, to monitor child processes:
     
 Note {{PID}} will be substituted for the pid of process in both the stop and restart commands.
 
+To specifiy an arbitrary list of PIDs for the the child processes, assign any object that responds to :call to process.child_pids. For example, to monitor Passenger:
+
+    class PassengerPids
+      class << self
+        def call
+          `ps ax | grep "Rails: " | grep -v grep | awk '{ print $1 }'`.map(&:to_i)
+        end
+      end
+    end
+    
+    Bluepill.application "Apache", :log_file => $stderr do |app|
+      app.process "Apache" do |process|
+        process.pid_file = "/var/run/apache2.pid"
+        process.start_command = "apache start command"
+        process.stop_command = "apache stop command"
+        process.restart_command = "apache restart command"
+        process.child_pids = PassengerPids
+        process.monitor_children do |child|
+          child.group = "Passengers"
+          child.checks :mem_usage, :every => 5.seconds, :below => 100.megabytes, :times => 1, :fires => :stop
+          child.stop_command = "kill -TERM {{PID}}"
+        end
+      end
+    end
+
+
 ### A Note About Output Redirection
 
 While you can specify shell tricks like the following in the start_command of a process:
