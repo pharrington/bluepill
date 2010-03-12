@@ -13,6 +13,7 @@ module Bluepill
       :stdin,
       
       :daemonize, 
+      :child_pids,
       :pid_file, 
       :working_dir,
       
@@ -356,7 +357,8 @@ module Bluepill
       @children.delete_if {|child| !child.process_running?(true) }
       
       # Add new found children to the list
-      new_children_pids = System.get_children(self.actual_pid) - @children.map {|child| child.actual_pid}
+      child_pids = self.child_pids ? self.child_pids.call : System.get_children(self.actual_pid)
+      new_children_pids = child_pids - @children.map {|child| child.actual_pid}
  
       unless new_children_pids.empty?
         logger.info "Existing children: #{@children.collect{|c| c.actual_pid}.join(",")}. Got new children: #{new_children_pids.inspect} for #{actual_pid}"
