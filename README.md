@@ -165,7 +165,7 @@ To specifiy an arbitrary list of PIDs for the the child processes, assign any ob
       end
     end
     
-    Bluepill.application "Apache", :log_file => $stderr do |app|
+    Bluepill.application "Apache" do |app|
       app.process "Apache" do |process|
         process.pid_file = "/var/run/apache2.pid"
         process.start_command = "apache start command"
